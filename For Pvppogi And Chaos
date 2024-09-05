@@ -1,0 +1,147 @@
+--ESP
+
+local DepthMode = "AlwaysOnTop"
+local FillTransparency = 0.5
+local OutlineColor = Color3.fromRGB(255, 255, 255)
+local OutlineTransparency = 0
+local CoreGui = game:FindService("CoreGui")
+local Players = game:FindService("Players")
+local lp = Players.LocalPlayer
+local connections = {}
+
+-- Storage for highlights
+local Storage = Instance.new("Folder")
+Storage.Parent = CoreGui
+Storage.Name = "Highlight_Storage"
+
+local function RainbowEffect(Highlight)
+    -- Rainbow cycle: smoothly transition through the color spectrum
+    while Highlight and Highlight.Parent do
+        for hue = 0, 1, 0.01 do
+            Highlight.FillColor = Color3.fromHSV(hue, 1, 1) -- Cycle through colors
+            wait(0.05) -- Speed of the color change (adjust for faster/slower effect)
+        end
+    end
+end
+
+-- Function to highlight a player
+local function HighlightPlayer(plr)
+    local Highlight = Instance.new("Highlight")
+    Highlight.Name = plr.Name
+
+    -- Check if the player is one of the specific players
+    if plr.Name == "ARAMPOGI_007" or plr.Name == "pvppogi_007" then
+        Highlight.FillColor = Color3.fromRGB(255, 165, 0) -- Orange for specific players
+    else
+        spawn(function() -- Apply rainbow effect to non-listed players
+            RainbowEffect(Highlight)
+        end)
+    end
+
+    Highlight.DepthMode = DepthMode
+    Highlight.FillTransparency = FillTransparency
+    Highlight.OutlineColor = OutlineColor
+    Highlight.OutlineTransparency = OutlineTransparency
+    Highlight.Parent = Storage
+
+    local plrchar = plr.Character
+    if plrchar then
+        Highlight.Adornee = plrchar
+    end
+
+    -- Connect CharacterAdded event to update the Adornee
+    connections[plr] = plr.CharacterAdded:Connect(function(char)
+        Highlight.Adornee = char
+    end)
+end
+
+-- Apply highlights when a new player joins
+Players.PlayerAdded:Connect(HighlightPlayer)
+
+-- Apply highlights to all current players
+for _, player in next, Players:GetPlayers() do
+    HighlightPlayer(player)
+end
+
+-- Clean up when a player leaves
+Players.PlayerRemoving:Connect(function(plr)
+    local plrname = plr.Name
+    if Storage[plrname] then
+        Storage[plrname]:Destroy()
+    end
+    if connections[plr] then
+        connections[plr]:Disconnect()
+    end
+end)
+
+-- Create a ScreenGui to hold our crosshair
+local gui = Instance.new("ScreenGui")
+gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a Frame for the horizontal line of the crosshair
+local horizontalLine = Instance.new("Frame")
+horizontalLine.Size = UDim2.new(0, 20, 0, 2) -- Adjust the size and thickness here
+horizontalLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Starting color
+horizontalLine.BorderSizePixel = 0
+horizontalLine.Parent = gui
+
+-- Create a Frame for the vertical line of the crosshair
+local verticalLine = Instance.new("Frame")
+verticalLine.Size = UDim2.new(0, 2, 0, 20) -- Adjust the size and thickness here
+verticalLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Starting color
+verticalLine.BorderSizePixel = 0
+verticalLine.Parent = gui
+
+-- Function to update the crosshair's position
+local function updateCrosshairPosition()
+    local mouse = game.Players.LocalPlayer:GetMouse()
+    horizontalLine.Position = UDim2.new(0, mouse.X - 10, 0, mouse.Y)
+    verticalLine.Position = UDim2.new(0, mouse.X, 0, mouse.Y - 10)
+end
+
+-- Connect the update function to the mouse move event
+game:GetService("RunService").RenderStepped:Connect(updateCrosshairPosition)
+
+-- Function to update the crosshair's color
+local function updateCrosshairColor()
+    local hue = tick() % 5 / 5 -- Cycle through colors every 5 seconds
+    horizontalLine.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
+    verticalLine.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
+end
+
+-- Connect the update function to the heartbeat event
+game:GetService("RunService").Heartbeat:Connect(updateCrosshairColor)
+
+getgenv().CrosshairSettings = {
+    Color = Color3.fromRGB(255,0,0),
+    RainbowColor = true, 
+    Opacity = 9,
+    Length = 10,-- Length of each line
+    Thickness = 2,-- Thickness of each line
+    Offset = 4, -- Offset from the middle point
+    Dot = true, -- not recommended
+    FollowCursor = false, -- Crosshair follows the cursor
+    HideMouseIcon = true, -- Hides the mouse icon, set to 0 to ignore
+    HideGameCrosshair = true, -- Hides the current game's crosshair (if its supported)
+    ToggleKey = Enum.KeyCode.RightAlt, -- Toggles crosshair visibility
+} -- v1.2.1
+loadstring(game:HttpGet("https://raw.githubusercontent.com/zzerexx/scripts/main/CustomCrosshair.lua", true))()
+
+_G.HeadSize = 20
+_G.Disabled = true
+
+game:GetService('RunService').RenderStepped:connect(function()
+if _G.Disabled then
+for i,v in next, game:GetService('Players'):GetPlayers() do
+if v.Name ~= game:GetService('Players').LocalPlayer.Name then
+pcall(function()
+v.Character.HumanoidRootPart.Size = Vector3.new(_G.HeadSize,_G.HeadSize,_G.HeadSize)
+v.Character.HumanoidRootPart.Transparency = 100
+v.Character.HumanoidRootPart.BrickColor = BrickColor.new("medium stone grey")
+v.Character.HumanoidRootPart.Material = "Neon"
+v.Character.HumanoidRootPart.CanCollide = false
+end)
+end
+end
+end
+end)
