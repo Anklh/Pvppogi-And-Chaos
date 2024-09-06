@@ -1,4 +1,3 @@
-
 -- ESP
 local DepthMode = "AlwaysOnTop"
 local FillTransparency = 0.5
