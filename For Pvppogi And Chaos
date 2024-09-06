@@ -1,5 +1,3 @@
--- Notification 
-loadstring(game:HttpGet("https://pastebin.com/raw/MB7Le4Ei"))()
 
 -- ESP
 local DepthMode = "AlwaysOnTop"
