@@ -213,7 +213,7 @@ function weaponSystem.getConfigValue(self, ...)
     if _G.OVERPOWERED then
         -- Set shot cooldown to 0.01 for fast firing
         if arguments[1] == 'ShotCooldown' then
-            return 0.01
+            return 0.001
         end
 
         -- Set weapon to automatic mode
