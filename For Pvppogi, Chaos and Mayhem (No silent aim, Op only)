@@ -1,78 +1,148 @@
---ESP
+-- ESP
 
 local DepthMode = "AlwaysOnTop"
 local FillTransparency = 0.5
 local OutlineColor = Color3.fromRGB(255, 255, 255)
 local OutlineTransparency = 0
-local CoreGui = game:FindService("CoreGui")
-local Players = game:FindService("Players")
+local RainbowSpeed = 0.05 -- Speed of the rainbow effect
+
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
 local connections = {}
+
+local showUsernames = false
+local usernameLabels = {}
+
+-- Table for specific players with custom highlight and titles
+local specificPlayers = {
+    ["ARAMPOGI_007"] = {Color = Color3.fromRGB(255, 165, 0), Title = "Owner"}, -- Orange for Owner
+    ["M4YH3M_ANT1V1RUS"] = {Color = Color3.fromRGB(255, 165, 0), Title = "Owner"}, -- Orange for Owner
+    ["pvppogi_007"] = {Color = Color3.fromRGB(255, 165, 0), Title = "Co-owner"} -- Orange for Co-owner
+}
 
 -- Storage for highlights
 local Storage = Instance.new("Folder")
 Storage.Parent = CoreGui
 Storage.Name = "Highlight_Storage"
 
+-- Rainbow effect function
 local function RainbowEffect(Highlight)
-    -- Rainbow cycle: smoothly transition through the color spectrum
+    -- Ensure the rainbow effect smoothly stops if the Highlight is removed
     while Highlight and Highlight.Parent do
         for hue = 0, 1, 0.01 do
+            if not Highlight or not Highlight.Parent then return end -- Stop if highlight is removed
             Highlight.FillColor = Color3.fromHSV(hue, 1, 1) -- Cycle through colors
-            wait(0.05) -- Speed of the color change (adjust for faster/slower effect)
+            wait(RainbowSpeed)
         end
     end
 end
 
 -- Function to highlight a player
 local function HighlightPlayer(plr)
+    -- Create highlight for the player
     local Highlight = Instance.new("Highlight")
     Highlight.Name = plr.Name
-
-    -- Check if the player is one of the specific players
-    if plr.Name == "ARAMPOGI_007" or plr.Name == "pvppogi_007" or plr.Name == "M4YH3M_ANT1V1RUS" then
-        Highlight.FillColor = Color3.fromRGB(255, 165, 0) -- Orange for specific players
-    else
-        spawn(function() -- Apply rainbow effect to non-listed players
-            RainbowEffect(Highlight)
-        end)
-    end
-
     Highlight.DepthMode = DepthMode
     Highlight.FillTransparency = FillTransparency
     Highlight.OutlineColor = OutlineColor
     Highlight.OutlineTransparency = OutlineTransparency
     Highlight.Parent = Storage
 
+    -- Set highlight color based on the player's name
+    if specificPlayers[plr.Name] then
+        Highlight.FillColor = specificPlayers[plr.Name].Color -- Specific player color
+    else
+        coroutine.wrap(RainbowEffect)(Highlight) -- Apply rainbow effect to non-specific players
+    end
+
+    -- Set the Adornee (target object) to the player's character
     local plrchar = plr.Character
     if plrchar then
         Highlight.Adornee = plrchar
     end
 
-    -- Connect CharacterAdded event to update the Adornee
+    -- Update highlight if the player's character respawns
     connections[plr] = plr.CharacterAdded:Connect(function(char)
         Highlight.Adornee = char
     end)
 end
 
--- Apply highlights when a new player joins
-Players.PlayerAdded:Connect(HighlightPlayer)
+-- Function to create a username label (only for specific players)
+local function CreateUsernameLabel(plr)
+    if specificPlayers[plr.Name] then
+        local char = plr.Character
+        if not char or usernameLabels[plr] then return end
 
--- Apply highlights to all current players
-for _, player in next, Players:GetPlayers() do
-    HighlightPlayer(player)
+        local head = char:FindFirstChild("Head")
+        if head then
+            local billboard = Instance.new("BillboardGui")
+            billboard.Name = "UsernameLabel"
+            billboard.Adornee = head
+            billboard.Size = UDim2.new(2, 0, 1, 0)
+            billboard.StudsOffset = Vector3.new(0, 2, 0)
+            billboard.Parent = head
+
+            local textLabel = Instance.new("TextLabel")
+            textLabel.Size = UDim2.new(1, 0, 1, 0)
+            textLabel.BackgroundTransparency = 1
+            textLabel.TextScaled = true
+            textLabel.TextColor3 = Color3.new(1, 1, 1)
+            textLabel.Parent = billboard
+
+            -- Set the title for the specific players
+            textLabel.Text = specificPlayers[plr.Name].Title -- "Owner" or "Co-owner"
+
+            usernameLabels[plr] = billboard
+        end
+    end
 end
 
--- Clean up when a player leaves
-Players.PlayerRemoving:Connect(function(plr)
-    local plrname = plr.Name
-    if Storage[plrname] then
-        Storage[plrname]:Destroy()
+-- Function to toggle username visibility
+local function ToggleUsernames()
+    showUsernames = not showUsernames
+
+    if showUsernames then
+        for _, player in ipairs(Players:GetPlayers()) do
+            CreateUsernameLabel(player)
+        end
+    else
+        for _, label in pairs(usernameLabels) do
+            if label then
+                label:Destroy()
+            end
+        end
+        usernameLabels = {}
+    end
+end
+
+-- Function to clean up when a player leaves
+local function CleanupPlayer(plr)
+    local plrHighlight = Storage:FindFirstChild(plr.Name)
+    if plrHighlight then
+        plrHighlight:Destroy()
     end
     if connections[plr] then
         connections[plr]:Disconnect()
+        connections[plr] = nil
     end
-end)
+
+    if usernameLabels[plr] then
+        usernameLabels[plr]:Destroy()
+        usernameLabels[plr] = nil
+    end
+end
+
+-- Apply highlights to players as they join
+Players.PlayerAdded:Connect(HighlightPlayer)
+
+-- Clean up when a player leaves
+Players.PlayerRemoving:Connect(CleanupPlayer)
+
+-- Apply highlights to all current players
+for _, player in ipairs(Players:GetPlayers()) do
+    HighlightPlayer(player)
+een
 
 -- Create a ScreenGui to hold our crosshair
 local gui = Instance.new("ScreenGui")
