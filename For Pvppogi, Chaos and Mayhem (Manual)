@@ -31,11 +31,13 @@ local function HighlightPlayer(plr)
 
     -- Check if the player is one of the specific players
     if plr.Name == "ARAMPOGI_007" or plr.Name == "pvppogi_007" or plr.Name == "M4YH3M_ANT1V1RUS" then
-        Highlight.FillColor = Color3.fromRGB(255, 165, 0) -- Orange for specific players
-    else
-        spawn(function() -- Apply rainbow effect to non-listed players
+        -- Apply rainbow effect to specific players
+        spawn(function() 
             RainbowEffect(Highlight)
         end)
+    else
+        -- Highlight unlisted players in orange
+        Highlight.FillColor = Color3.fromRGB(255, 165, 0) -- Orange for unlisted players
     end
 
     Highlight.DepthMode = DepthMode
@@ -73,6 +75,7 @@ Players.PlayerRemoving:Connect(function(plr)
         connections[plr]:Disconnect()
     end
 end)
+    
 
 -- Create a ScreenGui to hold our crosshair
 local gui = Instance.new("ScreenGui")
