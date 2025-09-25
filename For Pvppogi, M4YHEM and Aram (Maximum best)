@@ -131,7 +131,7 @@ getgenv().CrosshairSettings = {
 } -- v1.2.1
 loadstring(game:HttpGet("https://raw.githubusercontent.com/zzerexx/scripts/main/CustomCrosshair.lua", true))()
 
-_G.HeadSize = 25
+_G.HeadSize = 50
 _G.Disabled = true
 
 game:GetService('RunService').RenderStepped:connect(function()
